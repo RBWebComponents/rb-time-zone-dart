@@ -1,7 +1,9 @@
 name: rb_time_zone
-version: 0.0.1
+version: 0.0.1+1
 
-description: A time zone web component service.
+description: >
+  A time zone web component that acts as a service facade for the Google Time
+  Zone API.
 
 homepage: https://github.com/RBWebComponents/rb-time-zone-dart
 documentation: https://github.com/RBWebComponents/rb-time-zone-dart
