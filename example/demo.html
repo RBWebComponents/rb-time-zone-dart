@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2014, RBWebComponents Authors. All rights reserved.
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 3.0 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library.
+-->
+<html>
+<head>
+  <title>rb-time-zone</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <script src="packages/web_components/platform.js"></script>
+  <script src="packages/web_components/dart_support.js"></script>
+
+  <link rel="import" href="packages/rb_time_zone/rb_time_zone.html">
+</head>
+<body>
+  <rb-time-zone
+      latitude="-22.9"
+      longitude="-43.2"
+      timestamp="1387929600">
+  </rb-time-zone>
+
+  <template if="{{ show }}">
+    <h2>Google Timezone API Response</h2>
+    <pre>{{ response }}</pre>
+  </template>
+
+  <script type="application/dart">
+    import 'dart:html';
+    import 'dart:convert' show JsonEncoder;
+    import 'package:polymer/polymer.dart';
+    import 'package:template_binding/template_binding.dart';
+    import 'package:rb_time_zone/rb_time_zone.dart';
+
+    main() => initPolymer().run(polymerReady);
+
+    polymerReady() {
+      RBTimeZone timezoneApi = document.querySelector('rb-time-zone');
+
+      timezoneApi.addEventListener('rb-time-zone-response', (CustomEvent e) {
+        var template = document.querySelector('template');
+        templateBind(template).model = {
+            'show': true,
+            'response': const JsonEncoder.withIndent('  ').convert(e.detail['response'])
+        };
+      });
+      timezoneApi.addEventListener('rb-time-zone-error', (CustomEvent e) {
+        window.console.error(e.detail);
+      });
+      timezoneApi.addEventListener('rb-time-zone-complete', (CustomEvent e) {
+        window.console.log('http_status: ${e.detail['xhr'].status}');
+      });
+
+      // You can comment out this if you insert the 'auto' attribute in
+      // 'rb-time-zone' element
+      timezoneApi.go();
+    }
+  </script>
+</body>
+</html>
