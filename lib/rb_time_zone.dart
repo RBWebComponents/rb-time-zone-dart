@@ -18,6 +18,7 @@
 library rb_time_zone;
 
 import 'dart:html';
+import 'dart:async';
 import 'dart:convert' show JSON;
 import 'package:polymer/polymer.dart';
 import 'package:core_elements/core_ajax_dart.dart';
@@ -65,7 +66,7 @@ class RBTimeZone extends PolymerElement {
    * @type boolean
    * @default false
    */
-  @published bool auto = false;
+  @published bool auto;
 
   /**
    * The output format can be one of the following:
@@ -79,7 +80,7 @@ class RBTimeZone extends PolymerElement {
    * @type string
    * @default json
    */
-  @published String output = 'json';
+  @published String output;
 
   /**
    * The language in which to return results.
@@ -123,43 +124,38 @@ class RBTimeZone extends PolymerElement {
    */
   @published String signature;
 
-  @observable Map params = toObservable({});
-
-  CoreAjax coreAjax;
+  ObservableMap<String, Object> _params;
+  CoreAjax _coreAjax;
 
 
   RBTimeZone.created(): super.created() {
-    this.coreAjax =
-      document.createElement('core-ajax-dart')
-        ..addEventListener('core-response', _onResponse)
-        ..addEventListener('core-error', _onError)
-        ..addEventListener('core-complete', _onComplete);
+    _coreAjax = (document.createElement('core-ajax-dart') as CoreAjax)
+      ..addEventListener('core-response', _onResponse)
+      ..addEventListener('core-error', _onError)
+      ..addEventListener('core-complete', _onComplete);
+
+    _params = toObservable(<String, Object>{})
+      ..changes.listen((_) => _coreAjax.params = JSON.encode(_validParams));
+
+    auto = auto == null ? false : auto;
+    output = output == null ? 'json' : output;
   }
 
-  void attached(){
-    super.attached();
-    autoChanged();
-    outputChanged();
-    _initParams();
-  }
-
-  autoChanged() => this.coreAjax.auto = auto;
+  autoChanged() => _coreAjax.auto = auto;
 
   outputChanged() {
-    coreAjax.handleAs = output;
-    coreAjax.url = '$_BASE_URL/$output';
+    _coreAjax.handleAs = output;
+    _coreAjax.url = '$_BASE_URL/$output';
   }
 
-  // TODO: remove paramsChanged calls when issue 15407 gets fixed.
-  latitudeChanged() { params['location'] = _location; paramsChanged(); }
-  longitudeChanged() { params['location'] = _location; paramsChanged(); }
-  timestampChanged() { params['timestamp'] = timestamp.toString(); paramsChanged(); }
-  languageChanged() { params['language'] = language; paramsChanged(); }
-  apiKeyChanged() { params['key'] = apiKey; paramsChanged(); }
-  clientIdChanged() { params['client'] = _client; paramsChanged(); }
-  signatureChanged() { params['signature'] = signature; paramsChanged(); }
 
-  paramsChanged() => coreAjax.params = JSON.encode(_validParams);
+  latitudeChanged() { _params['location'] = _location; }
+  longitudeChanged() { _params['location'] = _location; }
+  timestampChanged() { _params['timestamp'] = timestamp; }
+  languageChanged() { _params['language'] = language; }
+  apiKeyChanged() { _params['key'] = apiKey; }
+  clientIdChanged() { _params['client'] = _client; }
+  signatureChanged() { _params['signature'] = signature; }
 
   String get _client => clientId != null && clientId != ''
                         ? 'gme-$clientId' : null;
@@ -167,22 +163,11 @@ class RBTimeZone extends PolymerElement {
   String get _location => latitude != null && longitude != null
                           ? '$latitude,$longitude' : null;
 
-  void _initParams() {
-    params
-      ..['location'] = _location
-      ..['timestamp'] = timestamp.toString()
-      ..['language'] = language
-      ..['key'] = apiKey
-      ..['client'] = _client
-      ..['signature'] = signature;
-    paramsChanged();
-  }
-
   Map get _validParams {
     var map = new Map();
-    for (var key in params.keys) {
-      if (params[key] != null) {
-        map[key] = params[key];
+    for (var key in _params.keys) {
+      if (_params[key] != null) {
+        map[key] = _params[key].toString();
       }
     }
     return map;
@@ -196,26 +181,26 @@ class RBTimeZone extends PolymerElement {
    *
    * @method go
    */
-  go() => coreAjax.go();
+  go() => Timer.run(() => _coreAjax.go());
 
   /**
    * Fired whenever a response or an error is received.
    *
-   * @event rb-time-zone-response
+   * @event time-zone-api-response
    */
-  _onResponse(CustomEvent event) => this.fire('rb-time-zone-response', detail: event.detail);
+  _onResponse(CustomEvent event) => this.fire('time-zone-api-response', detail: event.detail);
 
   /**
    * Fired whenever a response or an error is received.
    *
-   * @event rb-time-zone-error
+   * @event time-zone-api-error
    */
-  _onError(CustomEvent event) => this.fire('rb-time-zone-error', detail: event.detail);
+  _onError(CustomEvent event) => this.fire('time-zone-api-error', detail: event.detail);
 
   /**
    * Fired whenever a response or an error is received.
    *
-   * @event rb-time-zone-complete
+   * @event time-zone-api-complete
    */
-  _onComplete(CustomEvent event) => this.fire('rb-time-zone-complete', detail: event.detail);
+  _onComplete(CustomEvent event) => this.fire('time-zone-api-complete', detail: event.detail);
 }

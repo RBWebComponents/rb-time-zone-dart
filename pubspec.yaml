@@ -1,5 +1,5 @@
 name: rb_time_zone
-version: 0.0.1+2
+version: 0.1.0
 
 description: >
   A time zone web component that acts as a service facade for the Google Time

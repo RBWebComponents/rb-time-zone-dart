@@ -52,17 +52,17 @@ License along with this library.
     polymerReady() {
       RBTimeZone timezoneApi = document.querySelector('rb-time-zone');
 
-      timezoneApi.addEventListener('rb-time-zone-response', (CustomEvent e) {
+      timezoneApi.addEventListener('time-zone-api-response', (CustomEvent e) {
         var template = document.querySelector('template');
         templateBind(template).model = {
             'show': true,
             'response': const JsonEncoder.withIndent('  ').convert(e.detail['response'])
         };
       });
-      timezoneApi.addEventListener('rb-time-zone-error', (CustomEvent e) {
+      timezoneApi.addEventListener('time-zone-api-error', (CustomEvent e) {
         window.console.error(e.detail);
       });
-      timezoneApi.addEventListener('rb-time-zone-complete', (CustomEvent e) {
+      timezoneApi.addEventListener('time-zone-api-complete', (CustomEvent e) {
         window.console.log('http_status: ${e.detail['xhr'].status}');
       });
 
@@ -71,6 +71,5 @@ License along with this library.
       timezoneApi.go();
     }
   </script>
-  <script type="text/javascript" src="packages/browser/dart.js"></script>
 </body>
 </html>
